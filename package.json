@@ -1,0 +1,14 @@
+{
+  "name": "ccmonitor",
+  "version": "2.0.0",
+  "description": "Claude Code session real-time monitor",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^5.0.0",
+    "sql.js": "^1.11.0"
+  }
+}

@@ -9,9 +9,10 @@
 <body>
 
 <header>
+  <button class="menu-btn" id="menuBtn">&#9776;</button>
   <div class="logo">Claude<span>Code</span> Monitor</div>
   <div class="header-right">
-    <span class="refresh-rate">轮询间隔 500ms</span>
+    <span class="refresh-rate">SSE 实时推送</span>
     <div class="live-dot" id="liveDot"></div>
     <div class="theme-switcher">
       <button class="theme-btn" id="themeBtn">
@@ -24,13 +25,45 @@
 </header>
 
 <div class="copy-toast" id="copyToast">已复制 Session ID</div>
-<div class="error-banner" id="errorBanner">⚠ 无法读取 data.json，请确认 hook.py 正在运行且文件存在</div>
+<div class="error-banner" id="errorBanner">⚠ 无法连接到服务器，请确认 server.js 正在运行</div>
+
+<!-- Permission Panel -->
+<div class="permission-panel" id="permissionPanel">
+  <div class="permission-header">
+    <span class="permission-icon">🔒</span>
+    <span class="permission-title">权限请求</span>
+  </div>
+  <div class="permission-body">
+    <div class="permission-tool" id="permTool"></div>
+    <div class="permission-detail" id="permDetail"></div>
+  </div>
+  <div class="permission-actions">
+    <button class="perm-btn deny" id="permDeny">Deny</button>
+    <button class="perm-btn allow" id="permAllow">Allow</button>
+  </div>
+</div>
+<div class="mobile-overlay" id="mobileOverlay"></div>
 
 <div class="layout">
 
   <!-- Left: Session + Tools -->
-  <aside class="session-panel">
-    <div class="panel-header">Session</div>
+  <aside class="session-panel" id="sessionPanel">
+    <!-- History back button -->
+    <div class="history-back" id="historyBack">← 返回当前会话</div>
+
+    <!-- History panel overlay -->
+    <div class="history-panel" id="historyPanel">
+      <div class="history-header">
+        <span class="history-header-title">历史会话</span>
+        <button class="history-close" id="historyClose">✕</button>
+      </div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+
+    <div class="panel-header panel-header-bar">
+      <span>Session</span>
+      <button class="history-btn" id="historyBtn">历史</button>
+    </div>
 
     <div class="session-card">
       <div class="status-badge idle" id="statusBadge">
@@ -49,6 +82,10 @@
         <span class="meta-label">运行时长</span>
         <span class="meta-value" id="sessionDuration">—</span>
       </div>
+      <div class="meta-row">
+        <span class="meta-label">工作目录</span>
+        <span class="meta-value dir" id="sessionCwd">—</span>
+      </div>
     </div>
 
     <div class="task-panel">
@@ -56,7 +93,22 @@
       <div class="task-empty" id="taskDisplay">暂无任务</div>
     </div>
 
-    <div class="panel-header" style="border-top: 1px solid var(--border);">工具调用记录</div>
+    <div class="activity-bar" id="activityBar">
+      <div class="activity-dot" id="activityDot"></div>
+      <span class="activity-text" id="activityText">空闲</span>
+    </div>
+
+    <div class="panel-header">工具调用记录</div>
+    <div class="tool-filter">
+      <input type="text" class="tool-search" id="toolSearch" placeholder="搜索工具调用...">
+      <div class="filter-btns" id="filterBtns">
+        <button class="filter-btn active" data-type="all">All</button>
+        <button class="filter-btn" data-type="read">Read</button>
+        <button class="filter-btn" data-type="write">Write</button>
+        <button class="filter-btn" data-type="bash">Bash</button>
+        <button class="filter-btn" data-type="search">Search</button>
+      </div>
+    </div>
     <div class="tool-list" id="toolList">
       <div class="empty-state">等待工具调用…</div>
     </div>
