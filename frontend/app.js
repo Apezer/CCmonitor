@@ -146,8 +146,10 @@ function roleAvatarChar(role) {
 function renderMessage(msg) {
   const role = msg.role || 'system';
   const isUser = role === 'user';
+  const isPerm = (msg.content || '').includes('权限');
+  const cls = isUser ? ' user-msg' : isPerm ? ' perm-msg' : '';
   return `
-    <div class="msg-item${isUser ? ' user-msg' : ''}">
+    <div class="msg-item${cls}">
       <div class="msg-avatar ${role}">${roleAvatarChar(role)}</div>
       <div class="msg-body">
         <div class="msg-meta">
@@ -390,16 +392,41 @@ function renderActivity(activity, detail) {
 
 function render(data) {
   currentData = data;
-  const sess = data.session || {};
-  const allTools = data.tool_calls || [];
+
+  // Multi-session: render session list
+  renderSessionList(data.sessions || [], data.activeSessionId);
+
+  // If no active session, show empty state
+  if (!data.active) {
+    renderStatus('idle');
+    renderActivity('idle', '');
+    renderPermission(null);
+    document.getElementById('sessionId').childNodes[0].textContent = '—';
+    document.getElementById('sessionStart').textContent = '—';
+    document.getElementById('sessionDuration').textContent = '—';
+    document.getElementById('sessionCwd').textContent = '—';
+    document.getElementById('taskDisplay').className = 'task-empty';
+    document.getElementById('taskDisplay').textContent = '暂无任务';
+    document.getElementById('toolList').innerHTML = '<div class="empty-state">等待会话...</div>';
+    document.getElementById('statTotal').textContent = '0';
+    document.getElementById('statRunning').textContent = '0';
+    document.getElementById('statDone').textContent = '0';
+    document.getElementById('statMsgs').textContent = '0';
+    document.getElementById('messagesList').innerHTML = '<div class="empty-state">等待消息...</div>';
+    return;
+  }
+
+  const active = data.active;
+  const sess = active.session || {};
+  const allTools = active.tool_calls || [];
   const tools = filterTools(allTools);
-  const msgs  = data.messages  || [];
+  const msgs  = active.messages  || [];
 
   // Activity
-  renderActivity(data.activity, data.activity_detail);
+  renderActivity(active.activity, active.activity_detail);
 
   // Permission panel
-  renderPermission(data.pending_permission);
+  renderPermission(active.pending_permission);
 
   // Session
   renderStatus(sess.status || 'idle');
@@ -467,6 +494,45 @@ function render(data) {
     data.last_updated ? `最后更新：${new Date(data.last_updated).toLocaleTimeString('zh-CN', {hour12:false})}` : '';
 }
 
+// ── Session Switcher ──────────────────────────────────────
+
+function renderSessionList(sessionList, activeId) {
+  const select = document.getElementById('sessionSelect');
+  const currentVal = select.value;
+
+  // Only rebuild if sessions changed
+  const newIds = sessionList.map(s => s.id).join(',');
+  if (select.dataset.ids === newIds && currentVal === activeId) {
+    if (select.value !== activeId) select.value = activeId;
+    return;
+  }
+  select.dataset.ids = newIds;
+
+  select.innerHTML = sessionList.map(s => {
+    const label = `${shortId(s.id)} — ${s.activity || s.status} (${s.tool_count || 0} tools)`;
+    const selected = s.id === activeId ? 'selected' : '';
+    return `<option value="${escHtml(s.id)}" ${selected}>${escHtml(label)}</option>`;
+  }).join('');
+
+  select.value = activeId;
+}
+
+function initSessionSwitcher() {
+  document.getElementById('sessionSelect').addEventListener('change', async (e) => {
+    const sessionId = e.target.value;
+    if (!sessionId) return;
+    try {
+      await fetch('/api/active-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId })
+      });
+    } catch (err) {
+      console.error('Failed to switch session:', err);
+    }
+  });
+}
+
 // ── SSE Connection ────────────────────────────────────────
 
 function connectSSE() {
@@ -493,6 +559,7 @@ initSearchFilter();
 initHistory();
 initMobile();
 initPermissionButtons();
+initSessionSwitcher();
 connectSSE();
 
 // Live duration ticker

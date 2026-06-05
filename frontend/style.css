@@ -242,6 +242,29 @@ header {
   height: calc(100vh - 53px);
 }
 
+/* Session Switcher */
+.session-switcher {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.session-select {
+  width: 100%;
+  padding: 4px 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  outline: none;
+  cursor: pointer;
+}
+.session-select:focus { border-color: var(--accent); }
+.session-select option { background: var(--surface); color: var(--text); }
+
 /* Session Panel */
 .session-panel {
   grid-row: 1 / 3;
@@ -617,6 +640,19 @@ header {
 
 .msg-item.user-msg .msg-content {
   color: var(--purple);
+  font-weight: 500;
+}
+
+.msg-item.perm-msg {
+  background: var(--red-dim);
+  border-radius: 4px;
+  padding: 8px;
+  margin: -4px;
+  border-left: 2px solid var(--red);
+}
+
+.msg-item.perm-msg .msg-content {
+  color: var(--red);
   font-weight: 500;
 }
 
