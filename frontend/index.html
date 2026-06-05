@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code Monitor</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="logo">Claude<span>Code</span> Monitor</div>
+  <div class="header-right">
+    <span class="refresh-rate">轮询间隔 500ms</span>
+    <div class="live-dot" id="liveDot"></div>
+    <div class="theme-switcher">
+      <button class="theme-btn" id="themeBtn">
+        <div class="theme-dot" id="themeDot"></div>
+        <span id="themeLabel">Dark</span>
+      </button>
+      <div class="theme-dropdown" id="themeDropdown"></div>
+    </div>
+  </div>
+</header>
+
+<div class="copy-toast" id="copyToast">已复制 Session ID</div>
+<div class="error-banner" id="errorBanner">⚠ 无法读取 data.json，请确认 hook.py 正在运行且文件存在</div>
+
+<div class="layout">
+
+  <!-- Left: Session + Tools -->
+  <aside class="session-panel">
+    <div class="panel-header">Session</div>
+
+    <div class="session-card">
+      <div class="status-badge idle" id="statusBadge">
+        <div class="status-dot"></div>
+        <span id="statusText">空闲</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">Session ID</span>
+        <span class="meta-value copyable" id="sessionId" title="点击复制">—<span class="copy-tip" id="sessionTip"></span></span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">开始时间</span>
+        <span class="meta-value" id="sessionStart">—</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">运行时长</span>
+        <span class="meta-value" id="sessionDuration">—</span>
+      </div>
+    </div>
+
+    <div class="task-panel">
+      <div class="task-label">当前任务</div>
+      <div class="task-empty" id="taskDisplay">暂无任务</div>
+    </div>
+
+    <div class="panel-header" style="border-top: 1px solid var(--border);">工具调用记录</div>
+    <div class="tool-list" id="toolList">
+      <div class="empty-state">等待工具调用…</div>
+    </div>
+  </aside>
+
+  <!-- Right: Stats + Messages -->
+  <div class="right-panel">
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-value" id="statTotal" style="color: var(--text)">0</div>
+        <div class="stat-label">工具调用</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="statRunning" style="color: var(--accent)">0</div>
+        <div class="stat-label">进行中</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="statDone" style="color: var(--green)">0</div>
+        <div class="stat-label">已完成</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="statMsgs" style="color: var(--purple)">0</div>
+        <div class="stat-label">消息</div>
+      </div>
+    </div>
+
+    <div class="panel-header">对话历史</div>
+
+    <div class="messages-panel" id="messagesList">
+      <div class="empty-state">等待消息…</div>
+    </div>
+
+    <div class="last-updated" id="lastUpdated">尚未加载数据</div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

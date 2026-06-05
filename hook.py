@@ -12,8 +12,8 @@ import sys
 import os
 from datetime import datetime
 
-# data.json 与此脚本同目录
-DATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data.json")
+# data.json 放在 frontend 目录下，供前端直接读取
+DATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "frontend", "data.json")
 
 # 最多保留多少条工具调用记录
 MAX_TOOL_CALLS = 100
