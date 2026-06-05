@@ -228,6 +228,9 @@ function handleEvent(eventName, payload) {
     const permId = `perm-${++permissionCounter}-${Date.now()}`;
     s.activity = 'waiting'; s.activity_detail = `等待确认：${toolName}`;
     s.pending_permission = { id: permId, tool: toolName, input: toolInput };
+    const permMsg = { role: 'system', content: `Claude 需要您的许可以使用 ${toolName}`, timestamp: ts };
+    db.run(`INSERT INTO messages (session_id, role, content, timestamp) VALUES (?, ?, ?, ?)`, [sessionId, permMsg.role, permMsg.content, permMsg.timestamp]);
+    s.messages.unshift(permMsg); s.messages = s.messages.slice(0, MAX_MESSAGES);
     saveDb(); broadcast();
     return { holdResponse: true, permissionId: permId, toolName, toolInput };
   }

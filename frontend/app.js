@@ -146,7 +146,8 @@ function roleAvatarChar(role) {
 function renderMessage(msg) {
   const role = msg.role || 'system';
   const isUser = role === 'user';
-  const isPerm = (msg.content || '').includes('权限');
+  const content = (msg.content || '').toLowerCase();
+  const isPerm = content.includes('权限') || content.includes('许可') || content.includes('permission');
   const cls = isUser ? ' user-msg' : isPerm ? ' perm-msg' : '';
   return `
     <div class="msg-item${cls}">
