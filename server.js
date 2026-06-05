@@ -222,6 +222,7 @@ function handleEvent(eventName, payload) {
     state.session.status = 'running';
     state.activity = 'thinking';
     state.activity_detail = '';
+    state.current_task = prompt || null;
     // Record user message
     if (prompt) {
       const msg = { role: 'user', content: prompt, timestamp: ts };
@@ -338,6 +339,7 @@ function handleEvent(eventName, payload) {
     state.session.status = 'idle';
     state.activity = 'idle';
     state.activity_detail = '';
+    state.current_task = null;
     state.tool_calls.forEach(c => { if (c.status === 'running') { c.status = 'done'; c.finished_at = ts; } });
 
     const stopReason = payload.stop_reason || '';
@@ -528,7 +530,7 @@ app.get('/api/permissions', (req, res) => {
 
 app.get('/api/events', (req, res) => {
   res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
+    'Content-Type': 'text/event-stream; charset=utf-8',
     'Cache-Control': 'no-cache',
     'Connection': 'keep-alive',
   });
