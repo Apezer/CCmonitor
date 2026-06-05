@@ -145,8 +145,9 @@ function roleAvatarChar(role) {
 
 function renderMessage(msg) {
   const role = msg.role || 'system';
+  const isUser = role === 'user';
   return `
-    <div class="msg-item">
+    <div class="msg-item${isUser ? ' user-msg' : ''}">
       <div class="msg-avatar ${role}">${roleAvatarChar(role)}</div>
       <div class="msg-body">
         <div class="msg-meta">

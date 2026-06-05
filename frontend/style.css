@@ -607,6 +607,19 @@ header {
 .msg-role.system    { color: var(--text-dim); }
 .msg-role.user      { color: var(--purple); }
 
+.msg-item.user-msg {
+  background: var(--purple-dim);
+  border-radius: 4px;
+  padding: 8px;
+  margin: -4px;
+  border-left: 2px solid var(--purple);
+}
+
+.msg-item.user-msg .msg-content {
+  color: var(--purple);
+  font-weight: 500;
+}
+
 .msg-time {
   font-size: 10px;
   color: var(--text-faint);
