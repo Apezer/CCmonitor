@@ -68,7 +68,11 @@ function createSessionState(sessionId) {
 }
 
 function getOrCreate(sessionId) {
-  if (!sessions.has(sessionId)) sessions.set(sessionId, createSessionState(sessionId));
+  if (!sessions.has(sessionId)) {
+    sessions.set(sessionId, createSessionState(sessionId));
+    db.run(`INSERT OR IGNORE INTO sessions (id, status, started_at) VALUES (?, ?, ?)`, [sessionId, 'running', now()]);
+    saveDb();
+  }
   return sessions.get(sessionId);
 }
 
@@ -100,7 +104,7 @@ function buildState() {
 }
 
 function seedState() {
-  const recent = queryAll(`SELECT * FROM sessions WHERE status = 'running' ORDER BY started_at DESC LIMIT 5`);
+  const recent = queryAll(`SELECT * FROM sessions ORDER BY started_at DESC LIMIT 5`);
   for (const row of recent) {
     const s = createSessionState(row.id);
     s.session = { id: row.id, status: row.status, started_at: row.started_at, cwd: '' };
@@ -422,6 +426,18 @@ app.get('/api/sessions/:id', (req, res) => {
   const toolCalls = queryAll(`SELECT * FROM tool_calls WHERE session_id = ? ORDER BY id DESC`, [req.params.id]);
   const messages = queryAll(`SELECT * FROM messages WHERE session_id = ? ORDER BY id DESC`, [req.params.id]);
   res.json({ ...session, tool_calls: toolCalls, messages });
+});
+
+app.delete('/api/sessions/:id', (req, res) => {
+  const sid = req.params.id;
+  db.run(`DELETE FROM tool_calls WHERE session_id = ?`, [sid]);
+  db.run(`DELETE FROM messages WHERE session_id = ?`, [sid]);
+  db.run(`DELETE FROM sessions WHERE id = ?`, [sid]);
+  saveDb();
+  sessions.delete(sid);
+  if (activeSessionId === sid) activeSessionId = null;
+  broadcast();
+  res.json({ ok: true });
 });
 
 // ── Start ─────────────────────────────────────────────────

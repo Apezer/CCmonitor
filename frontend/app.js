@@ -241,6 +241,7 @@ async function loadHistory() {
             <div class="history-item-status ${statusCls}">${statusText}</div>
             <div class="history-item-time">${time}${endStr}</div>
             <div class="history-item-meta">${s.tool_count || 0} 工具调用 · ${s.message_count || 0} 消息 · ${escHtml(shortId(s.id))}</div>
+            <button class="history-delete" data-id="${escHtml(s.id)}" title="删除此会话">✕</button>
           </div>`;
       }).join('');
     }
@@ -249,7 +250,23 @@ async function loadHistory() {
 
     // Bind click events
     list.querySelectorAll('.history-item').forEach(item => {
-      item.addEventListener('click', () => loadSessionDetail(item.dataset.id));
+      item.addEventListener('click', (e) => {
+        if (e.target.classList.contains('history-delete')) return;
+        loadSessionDetail(item.dataset.id);
+      });
+    });
+
+    list.querySelectorAll('.history-delete').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (!confirm('确定删除此会话？')) return;
+        try {
+          await fetch(`/api/sessions/${btn.dataset.id}`, { method: 'DELETE' });
+          openHistory();
+        } catch (e) {
+          console.error('Failed to delete session:', e);
+        }
+      });
     });
   } catch (e) {
     list.innerHTML = '<div class="empty-state">加载失败</div>';
@@ -498,39 +515,65 @@ function render(data) {
 // ── Session Switcher ──────────────────────────────────────
 
 function renderSessionList(sessionList, activeId) {
-  const select = document.getElementById('sessionSelect');
-  const currentVal = select.value;
+  const display = document.getElementById('sessionSelectDisplay');
+  const dropdown = document.getElementById('sessionSelectDropdown');
 
-  // Only rebuild if sessions changed
   const newIds = sessionList.map(s => s.id).join(',');
-  if (select.dataset.ids === newIds && currentVal === activeId) {
-    if (select.value !== activeId) select.value = activeId;
-    return;
-  }
-  select.dataset.ids = newIds;
+  if (dropdown.dataset.ids === newIds && dropdown.dataset.active === activeId) return;
+  dropdown.dataset.ids = newIds;
+  dropdown.dataset.active = activeId;
 
-  select.innerHTML = sessionList.map(s => {
+  const activeSession = sessionList.find(s => s.id === activeId);
+  display.textContent = activeSession
+    ? `${shortId(activeSession.id)} — ${activeSession.activity || activeSession.status}`
+    : '选择会话...';
+
+  dropdown.innerHTML = sessionList.map(s => {
     const label = `${shortId(s.id)} — ${s.activity || s.status} (${s.tool_count || 0} tools)`;
-    const selected = s.id === activeId ? 'selected' : '';
-    return `<option value="${escHtml(s.id)}" ${selected}>${escHtml(label)}</option>`;
+    const cls = s.id === activeId ? 'session-option active' : 'session-option';
+    return `<div class="${cls}" data-id="${escHtml(s.id)}">
+      <span class="session-option-label">${escHtml(label)}</span>
+      <button class="session-option-delete" data-id="${escHtml(s.id)}" title="删除">✕</button>
+    </div>`;
   }).join('');
 
-  select.value = activeId;
+  // Bind click events
+  dropdown.querySelectorAll('.session-option-label').forEach(el => {
+    el.addEventListener('click', async () => {
+      const id = el.parentElement.dataset.id;
+      try {
+        await fetch('/api/active-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: id })
+        });
+      } catch (err) { console.error('Failed to switch session:', err); }
+      dropdown.classList.remove('open');
+    });
+  });
+
+  dropdown.querySelectorAll('.session-option-delete').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!confirm('确定删除此会话？')) return;
+      try {
+        await fetch(`/api/sessions/${btn.dataset.id}`, { method: 'DELETE' });
+      } catch (err) { console.error('Failed to delete session:', err); }
+    });
+  });
 }
 
 function initSessionSwitcher() {
-  document.getElementById('sessionSelect').addEventListener('change', async (e) => {
-    const sessionId = e.target.value;
-    if (!sessionId) return;
-    try {
-      await fetch('/api/active-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId })
-      });
-    } catch (err) {
-      console.error('Failed to switch session:', err);
-    }
+  const wrap = document.getElementById('sessionSelectWrap');
+  const display = document.getElementById('sessionSelectDisplay');
+  const dropdown = document.getElementById('sessionSelectDropdown');
+
+  display.addEventListener('click', () => {
+    dropdown.classList.toggle('open');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!wrap.contains(e.target)) dropdown.classList.remove('open');
   });
 }
 
