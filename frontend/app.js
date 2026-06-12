@@ -338,6 +338,21 @@ function initMobile() {
 
 let currentPermissionId = null;
 
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 800;
+    gain.gain.value = 0.3;
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    osc.stop(ctx.currentTime + 0.5);
+  } catch (e) {}
+}
+
 function renderPermission(perm) {
   const panel = document.getElementById('permissionPanel');
   if (!perm) {
@@ -345,6 +360,8 @@ function renderPermission(perm) {
     currentPermissionId = null;
     return;
   }
+
+  if (perm.id !== currentPermissionId) playBeep();
 
   currentPermissionId = perm.id;
   document.getElementById('permTool').textContent = perm.tool || 'Unknown';
